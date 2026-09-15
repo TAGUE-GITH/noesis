@@ -30,3 +30,20 @@ def poser_question(fiche_id):
         )
 
     return jsonify(resultat)
+
+
+@assistant_bp.route("/api/fiches/<int:fiche_id>/quiz", methods=["POST"])
+def generer_quiz(fiche_id):
+    fiche = fiche_repository.obtenir_par_id(fiche_id)
+    if fiche is None:
+        abort(404, description="Cette fiche n'existe pas.")
+
+    try:
+        resultat = assistant_service.generer_quiz(fiche)
+    except AssistantIndisponible:
+        return (
+            jsonify({"erreur": "L'assistant IA est momentanément indisponible."}),
+            503,
+        )
+
+    return jsonify(resultat)

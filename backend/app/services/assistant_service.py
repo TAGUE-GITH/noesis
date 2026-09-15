@@ -32,3 +32,16 @@ def repondre_question(fiche: Fiche, question: str) -> dict:
         "reponse": reponse,
         "source": {"id": fiche.id, "titre": fiche.titre},
     }
+
+
+def generer_quiz(fiche: Fiche) -> dict:
+    """Même principe que repondre_question : le quiz est généré à partir du
+    contenu de CETTE fiche uniquement, donc la correction (bonne réponse +
+    explication) reste ancrée dans un contenu vérifié — pas de second appel
+    IA nécessaire pour corriger, tout arrive dans la même réponse."""
+    contexte = construire_contexte(fiche)
+    questions = ia_client.generer_quiz(contexte)
+    return {
+        "questions": questions,
+        "source": {"id": fiche.id, "titre": fiche.titre},
+    }
