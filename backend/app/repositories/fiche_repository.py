@@ -1,6 +1,7 @@
 from sqlalchemy import text
 
 from app.extensions import db
+from app.models.fiche import Fiche
 
 # SQL brut plutôt que pur ORM : dès qu'on mélange une recherche floue
 # (unaccent/ILIKE) et une recherche à l'intérieur d'un tableau (mots_cles),
@@ -37,3 +38,8 @@ def rechercher(terme: str) -> list[dict]:
     motif = f"%{terme}%"
     resultat = db.session.execute(_REQUETE_RECHERCHE, {"motif": motif})
     return [dict(ligne._mapping) for ligne in resultat]
+
+def obtenir_par_id(fiche_id: int) -> Fiche | None:
+    """Récupère une fiche complète (avec ses ressources) par son id (US03).
+    Ici, l'ORM classique suffit largement — pas besoin de SQL brut."""
+    return db.session.get(Fiche, fiche_id)

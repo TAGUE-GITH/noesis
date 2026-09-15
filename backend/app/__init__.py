@@ -1,32 +1,33 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_migrate import Migrate
 
-from config import Config
+from app.config import Config
 from app.extensions import db
-
 
 migrate = Migrate()
 
 
 def create_app():
-    """
-    Factory qui construit et configure l'application Flask.
-    """
     app = Flask(__name__)
-
-    # Chargement de la configuration
     app.config.from_object(Config)
 
-    # Initialisation des extensions
     db.init_app(app)
     migrate.init_app(app, db)
 
-    # Import des modèles pour les enregistrer dans les métadonnées SQLAlchemy.
-    # Cet import doit être effectué après l'initialisation de db.
-    from app.models import Fiche, Ressource  # noqa: F401
+    from app.models import fiche  # noqa: F401
+
+    from app.routes.recherche_routes import bp as recherche_bp
+    from app.routes.fiche_routes import bp as fiche_bp
+    app.register_blueprint(recherche_bp)
+    app.register_blueprint(fiche_bp)
 
     @app.get("/api/health")
     def health():
         return {"status": "ok"}
+
+    @app.errorhandler(404)
+    def non_trouve(e):
+        message = getattr(e, "description", "Ressource introuvable.")
+        return jsonify({"erreur": message}), 404
 
     return app
