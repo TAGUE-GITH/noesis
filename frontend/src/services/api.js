@@ -12,3 +12,16 @@ export async function obtenirFiche(id) {
   if (!reponse.ok) throw new Error("Erreur lors de la récupération de la fiche.");
   return reponse.json();
 }
+
+export async function poserQuestionAssistant(ficheId, question) {
+  const reponse = await fetch(`${BASE_URL}/fiches/${ficheId}/assistant`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question }),
+  });
+  const donnees = await reponse.json().catch(() => null);
+  if (!reponse.ok) {
+    throw new Error(donnees?.erreur || "L'assistant IA est momentanément indisponible.");
+  }
+  return donnees;
+}
