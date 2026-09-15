@@ -3,6 +3,7 @@ from flask_migrate import Migrate
 
 from app.config import Config
 from app.extensions import db
+from flask_cors import CORS
 
 migrate = Migrate()
 
@@ -13,6 +14,7 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
+    CORS(app, resources={r"/api/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}})
 
     from app.models import fiche  # noqa: F401
 
