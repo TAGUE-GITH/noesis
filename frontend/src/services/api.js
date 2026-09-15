@@ -25,3 +25,14 @@ export async function poserQuestionAssistant(ficheId, question) {
   }
   return donnees;
 }
+
+export async function genererQuiz(ficheId) {
+  const reponse = await fetch(`${BASE_URL}/fiches/${ficheId}/quiz`, {
+    method: "POST",
+  });
+  const donnees = await reponse.json().catch(() => null);
+  if (!reponse.ok) {
+    throw new Error(donnees?.erreur || "L'assistant IA est momentanément indisponible.");
+  }
+  return donnees;
+}

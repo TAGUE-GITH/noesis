@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { obtenirFiche } from "../services/api";
 import AssistantIA from "../components/AssistantIA";
+import QuizIA from "../components/QuizIA";
 
 export default function FichePage() {
   const { id } = useParams();
@@ -124,6 +125,7 @@ export default function FichePage() {
         </section>
       )}
       <AssistantIA ficheId={fiche.id} />
+        <QuizIA ficheId={fiche.id} />
     </div>
   );
 }
