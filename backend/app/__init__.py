@@ -1,19 +1,32 @@
 from flask import Flask
+from flask_migrate import Migrate
+
+from config import Config
+from app.extensions import db
+
+
+migrate = Migrate()
 
 
 def create_app():
-    """Factory qui construit et configure l'application Flask.
-
-    On utilise une factory (plutôt qu'une instance globale de Flask créée
-    directement dans un fichier) pour pouvoir créer plusieurs instances de
-    l'app avec des configurations différentes — utile notamment pour les
-    tests automatisés (étape 26), qui ont besoin d'une app isolée.
+    """
+    Factory qui construit et configure l'application Flask.
     """
     app = Flask(__name__)
 
+    # Chargement de la configuration
+    app.config.from_object(Config)
+
+    # Initialisation des extensions
+    db.init_app(app)
+    migrate.init_app(app, db)
+
+    # Import des modèles pour les enregistrer dans les métadonnées SQLAlchemy.
+    # Cet import doit être effectué après l'initialisation de db.
+    from app.models import Fiche, Ressource  # noqa: F401
+
     @app.get("/api/health")
     def health():
-        """Endpoint minimal pour vérifier que le serveur tourne."""
         return {"status": "ok"}
 
     return app
