@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { poserQuestionAssistant } from "../services/api";
 
-export default function AssistantIA({ ficheId }) {
+export default function AssistantIA({ slug }) {
   const [question, setQuestion] = useState("");
   const [reponse, setReponse] = useState(null);
   const [enCours, setEnCours] = useState(false);
@@ -14,7 +14,7 @@ export default function AssistantIA({ ficheId }) {
     setErreur(null);
     setReponse(null);
     try {
-      const resultat = await poserQuestionAssistant(ficheId, question);
+      const resultat = await poserQuestionAssistant(slug, question);
       setReponse(resultat);
     } catch (err) {
       setErreur(err.message);
@@ -26,11 +26,11 @@ export default function AssistantIA({ ficheId }) {
   return (
     <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-        Une question sur cette fiche ?
+        Une question sur cette notion ?
       </h2>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        L'assistant répond uniquement à partir du contenu de cette fiche — pas
-        de connaissances externes.
+        L'assistant répond uniquement à partir du contenu de cette notion —
+        pas de connaissances externes.
       </p>
 
       <form onSubmit={poserQuestion} className="mt-3 flex gap-2">

@@ -6,7 +6,7 @@ import { rechercherFiches } from "../services/api";
 
 export default function HomePage() {
   const [terme, setTerme] = useState("");
-  const [resultats, setResultats] = useState(null);
+  const [donnees, setDonnees] = useState(null);
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState(null);
 
@@ -16,7 +16,7 @@ export default function HomePage() {
     setErreur(null);
     try {
       const data = await rechercherFiches(terme);
-      setResultats(data);
+      setDonnees(data);
     } catch {
       setErreur("Une erreur est survenue. Réessaie dans un instant.");
     } finally {
@@ -26,6 +26,8 @@ export default function HomePage() {
 
   return (
     <div className="relative flex min-h-[calc(100vh-72px)] flex-col items-center overflow-hidden px-4 pt-16">
+      {/* Halo décoratif en dégradé, purement visuel : positionné en absolu, ne
+          capte aucun événement (pointer-events-none), flouté (blur-3xl). */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/3 rounded-full bg-gradient-to-br from-brand-300 via-brand-500 to-brand-700 opacity-20 blur-3xl dark:opacity-30"
@@ -59,7 +61,13 @@ export default function HomePage() {
         {erreur && (
           <p className="mt-6 animate-fade-in-up text-red-500 dark:text-red-400">{erreur}</p>
         )}
-        {!enCours && <ResultList resultats={resultats} terme={terme} />}
+        {!enCours && (
+          <ResultList
+            resultats={donnees ? donnees.resultats : null}
+            generationEchouee={donnees ? donnees.generation_echouee : false}
+            terme={terme}
+          />
+        )}
       </div>
     </div>
   );

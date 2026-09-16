@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { genererQuiz } from "../services/api";
 
-export default function QuizIA({ ficheId }) {
+export default function QuizIA({ slug }) {
   const [quiz, setQuiz] = useState(null);
   const [reponses, setReponses] = useState({});
   const [corrige, setCorrige] = useState(false);
@@ -15,7 +15,7 @@ export default function QuizIA({ ficheId }) {
     setReponses({});
     setCorrige(false);
     try {
-      const resultat = await genererQuiz(ficheId);
+      const resultat = await genererQuiz(slug);
       setQuiz(resultat);
     } catch (err) {
       setErreur(err.message);
@@ -41,7 +41,7 @@ export default function QuizIA({ ficheId }) {
         Tester ma compréhension
       </h2>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Un petit quiz généré à partir de cette fiche, pour vérifier ce que tu
+        Un petit quiz généré à partir de ce contenu, pour vérifier ce que tu
         as retenu.
       </p>
 
