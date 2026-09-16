@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { obtenirNotion } from "../services/api";
 import AssistantIA from "../components/AssistantIA";
-import QuizIA from "../components/QuizIA";
+import OngletsNotion from "../components/OngletsNotion";
 
 // Style visuel par type de bloc : chaque type de contenu pédagogique a son
 // propre traitement (couleur, libellé) pour que l'oeil distingue tout de
@@ -85,6 +85,12 @@ export default function NotionPage() {
           <p className="mt-4 text-lg leading-relaxed text-slate-600 dark:text-slate-300">
             {notion.resume}
           </p>
+
+          {/* Onglets Cours/Exercices : la lecture et l'entraînement sont
+              désormais deux pages distinctes, comme sur une vraie
+              plateforme d'apprentissage, plutôt qu'un quiz empilé en bas
+              du cours. */}
+          <OngletsNotion slug={notion.slug} actif="cours" />
         </div>
       </div>
 
@@ -97,8 +103,8 @@ export default function NotionPage() {
             <ol className="mt-2 space-y-1">
               {notion.contenu.map((bloc, index) => (
                 <li key={index}>
-                  
-                  <a  href={`#bloc-${index}`}
+                  <a
+                    href={`#bloc-${index}`}
                     className="text-sm text-slate-600 transition hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400"
                   >
                     {index + 1}. {bloc.titre}
@@ -185,7 +191,6 @@ export default function NotionPage() {
         )}
 
         <AssistantIA slug={notion.slug} />
-        <QuizIA slug={notion.slug} />
       </div>
     </div>
   );

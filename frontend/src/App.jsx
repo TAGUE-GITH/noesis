@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import Header from "./components/Header";
 import HomePage from "./pages/HomePage";
 import NotionPage from "./pages/NotionPage";
+import ExercicesPage from "./pages/ExercicesPage";
 
 // Layout : élément partagé (l'en-tête) qui entoure toutes les pages.
 // <Outlet /> est l'endroit où React Router insère la page active.
@@ -21,6 +22,7 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/notions/:slug" element={<NotionPage />} />
+          <Route path="/notions/:slug/exercices" element={<ExercicesPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
