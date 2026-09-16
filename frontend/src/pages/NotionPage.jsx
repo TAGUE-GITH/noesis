@@ -3,6 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { obtenirNotion } from "../services/api";
 import AssistantIA from "../components/AssistantIA";
 import OngletsNotion from "../components/OngletsNotion";
+import BlocCode from "../components/BlocCode";
+import BlocDiagramme from "../components/BlocDiagramme";
 
 // Style visuel par type de bloc : chaque type de contenu pédagogique a son
 // propre traitement (couleur, libellé) pour que l'oeil distingue tout de
@@ -26,6 +28,19 @@ const STYLE_PAR_TYPE = {
     classe:
       "border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10",
     classeLibelle: "text-red-700 dark:text-red-400",
+  },
+
+    test: {
+    libelle: "Teste-toi",
+    classe:
+      "border-teal-200 bg-teal-50 dark:border-teal-500/30 dark:bg-teal-500/10",
+    classeLibelle: "text-teal-700 dark:text-teal-400",
+  },
+  amusement: {
+    libelle: "Le sais-tu ?",
+    classe:
+      "border-pink-200 bg-pink-50 dark:border-pink-500/30 dark:bg-pink-500/10",
+    classeLibelle: "text-pink-700 dark:text-pink-400",
   },
 };
 
@@ -103,6 +118,7 @@ export default function NotionPage() {
             <ol className="mt-2 space-y-1">
               {notion.contenu.map((bloc, index) => (
                 <li key={index}>
+                  
                   <a
                     href={`#bloc-${index}`}
                     className="text-sm text-slate-600 transition hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400"
@@ -148,25 +164,37 @@ export default function NotionPage() {
               )}
 
               {bloc.code && (
-                <div className="ml-10 mt-4 overflow-hidden rounded-xl border border-slate-800 shadow-sm">
-                  {bloc.langage && (
-                    <div className="flex items-center gap-1.5 bg-slate-800 px-4 py-2">
-                      <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
-                      <span className="ml-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-                        {bloc.langage}
-                      </span>
-                    </div>
-                  )}
-                  <pre className="overflow-x-auto bg-slate-900 p-4 text-sm leading-relaxed text-slate-100 dark:bg-slate-950">
-                    <code>{bloc.code}</code>
-                  </pre>
+                <div className="ml-10">
+                  <BlocCode code={bloc.code} langage={bloc.langage} />
+                </div>
+              )}
+                            {bloc.etapes?.length > 0 && (
+                <div className="ml-10">
+                  <BlocDiagramme etapes={bloc.etapes} />
                 </div>
               )}
             </section>
           );
         })}
+
+        {notion.notions_liees?.length > 0 && (
+          <section className="mt-12">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Notions liées
+            </h2>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {notion.notions_liees.map((liee) => (
+                <Link
+                  key={liee.slug}
+                  to={`/notions/${liee.slug}`}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm text-slate-600 transition hover:border-brand-300 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-brand-500 dark:hover:text-brand-400"
+                >
+                  {liee.titre}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {notion.ressources?.length > 0 && (
           <section className="mt-12">
@@ -177,7 +205,8 @@ export default function NotionPage() {
               {notion.ressources.map((r) => (
                 <li key={r.url}>
                   
-                  <a  href={r.url}
+                   <a
+                    href={r.url}
                     target="_blank"
                     rel="noreferrer"
                     className="text-brand-600 hover:underline dark:text-brand-500"
