@@ -15,6 +15,8 @@ def construire_contexte(notion: Notion) -> str:
         lignes.append(f"{titre_bloc} : {texte_bloc}".strip(" :"))
         if bloc.get("code"):
             lignes.append(f"Code ({bloc.get('langage', '')}) :\n{bloc['code']}")
+        if bloc.get("etapes"):
+            lignes.append("Étapes : " + " -> ".join(bloc["etapes"]))
     return "\n".join(lignes)
 
 

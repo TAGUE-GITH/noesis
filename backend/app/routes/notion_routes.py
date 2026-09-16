@@ -16,4 +16,5 @@ def detail(slug):
     notion = notion_service.obtenir_detail(slug)
     if notion is None:
         abort(404, description="Cette notion n'existe pas.")
-    return jsonify(vers_detail_notion(notion))
+    notions_liees = notion_service.obtenir_notions_liees(notion)
+    return jsonify(vers_detail_notion(notion, notions_liees))

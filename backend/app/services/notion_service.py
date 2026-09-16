@@ -93,3 +93,10 @@ def generer_et_creer(terme: str):
 
 def obtenir_detail(slug: str):
     return notion_repository.obtenir_par_slug(slug)
+
+
+def obtenir_notions_liees(notion) -> list[dict]:
+    """Notions apparentées à afficher en bas de page (increment C) —
+    calculées à partir des mots-clés partagés, voir
+    notion_repository.notions_liees."""
+    return notion_repository.notions_liees(notion.id, notion.mots_cles)

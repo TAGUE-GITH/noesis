@@ -104,6 +104,37 @@ def rechercher_flou(terme: str) -> list[dict]:
     return [dict(ligne._mapping) for ligne in resultat]
 
 
+def notions_liees(notion_id: int, mots_cles: list[str], limite: int = 5) -> list[dict]:
+    """Notions apparentées à afficher en bas de page (increment C) : celles
+    qui partagent au moins un mot-clé avec la notion consultée, triées par
+    nombre de mots-clés communs. Calculé à la volée à partir de
+    `mots_cles` plutôt que lu depuis la colonne `notions_liees` (qui reste
+    disponible pour une curation manuelle ou IA plus tard, mais n'est
+    remplie nulle part pour l'instant) : ça reste à jour automatiquement
+    à mesure que de nouvelles notions s'ajoutent, sans appel IA
+    supplémentaire."""
+    if not mots_cles:
+        return []
+
+    requete = text(
+        """
+        SELECT id, titre, slug,
+               cardinality(ARRAY(
+                   SELECT unnest(mots_cles) INTERSECT SELECT unnest(CAST(:mots_cles AS text[]))
+               )) AS nb_communs
+        FROM notion
+        WHERE id != :notion_id
+          AND mots_cles && CAST(:mots_cles AS text[])
+        ORDER BY nb_communs DESC, titre ASC
+        LIMIT :limite
+        """
+    )
+    resultat = db.session.execute(
+        requete,
+        {"notion_id": notion_id, "mots_cles": mots_cles, "limite": limite},
+    )
+    return [dict(ligne._mapping) for ligne in resultat]
+
 def lister_titres_slugs() -> list[dict]:
     """Liste (titre, slug) de toutes les notions existantes. Utilisé pour
     le troisième palier de recherche (correspondance IA) : savoir si un
