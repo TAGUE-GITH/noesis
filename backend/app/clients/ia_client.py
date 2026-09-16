@@ -367,3 +367,82 @@ def generer_notion(terme: str) -> dict:
             return resultat
 
     raise AssistantIndisponible("Réponse inattendue de l'IA : pas de contenu reçu.")
+
+
+_INSTRUCTION_SYSTEME_CORRESPONDANCE = (
+    "On te donne une recherche tapée par un visiteur et la liste des "
+    "notions déjà disponibles (titre et slug). Dis si cette recherche "
+    "correspond CLAIREMENT à l'une de ces notions, même formulée "
+    "différemment (synonyme, abréviation, reformulation — ex. \"POO\" pour "
+    "\"Programmation orientée objet\"). En cas de doute ou de "
+    "correspondance seulement approximative, réponds qu'il n'y en a pas : "
+    "mieux vaut générer un nouveau contenu que renvoyer une notion à côté "
+    "du sujet."
+)
+
+_OUTIL_CORRESPONDANCE = {
+    "name": "soumettre_correspondance",
+    "description": "Indique si la recherche correspond à une notion déjà existante.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "slug_correspondant": {
+                "type": "string",
+                "description": (
+                    "Le slug de la notion existante qui correspond "
+                    "clairement à la recherche, ou une chaîne vide si "
+                    "aucune ne correspond clairement."
+                ),
+            },
+        },
+        "required": ["slug_correspondant"],
+    },
+}
+
+
+def trouver_correspondance(terme: str, notions_existantes: list[dict]) -> str | None:
+    """Troisième palier de la recherche (increment B) : avant de générer
+    une toute nouvelle notion, vérifie si le terme cherché correspond en
+    réalité à une notion déjà existante mais formulée différemment —
+    évite de dupliquer un contenu déjà généré/vérifié pour une simple
+    histoire de vocabulaire. Un appel court (peu de tokens), pas une
+    génération complète. Renvoie le slug correspondant, ou None si aucune
+    notion existante ne correspond clairement (ou s'il n'y a encore aucune
+    notion en base)."""
+    if not notions_existantes:
+        return None
+
+    cle_api = os.environ.get("ANTHROPIC_API_KEY")
+    if not cle_api:
+        raise AssistantIndisponible("ANTHROPIC_API_KEY n'est pas configurée")
+
+    modele = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5")
+
+    liste = "\n".join(
+        f"- {n['titre']} (slug: {n['slug']})" for n in notions_existantes
+    )
+
+    client = Anthropic(api_key=cle_api)
+    try:
+        message = client.messages.create(
+            model=modele,
+            max_tokens=200,
+            system=_INSTRUCTION_SYSTEME_CORRESPONDANCE,
+            tools=[_OUTIL_CORRESPONDANCE],
+            tool_choice={"type": "tool", "name": "soumettre_correspondance"},
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Recherche : {terme}\n\nNotions disponibles :\n{liste}",
+                }
+            ],
+        )
+    except APIError as erreur:
+        raise AssistantIndisponible(str(erreur)) from erreur
+
+    for bloc in message.content:
+        if bloc.type == "tool_use" and bloc.name == "soumettre_correspondance":
+            slug = (bloc.input.get("slug_correspondant") or "").strip()
+            return slug or None
+
+    return None

@@ -70,6 +70,55 @@ def rechercher(terme: str) -> list[dict]:
     return [dict(ligne._mapping) for ligne in resultat]
 
 
+# Seuil de similarité (0 à 1) en dessous duquel un résultat flou est ignoré
+# — trop bas, on renvoie des notions sans rapport ; trop haut, on ne
+# tolère presque plus aucune faute de frappe. 0.35 est un point de départ
+# raisonnable, ajustable si l'usage réel montre qu'il faut l'affiner.
+_SEUIL_SIMILARITE = 0.35
+
+
+def rechercher_flou(terme: str) -> list[dict]:
+    """Deuxième palier de recherche (increment B) : tolère les fautes de
+    frappe ou les variantes proches d'un titre existant (ex. "algoritme"
+    -> "Algorithme"), via la similarité de trigrammes de PostgreSQL
+    (extension pg_trgm). N'est utilisé que si `rechercher` (mots entiers
+    exacts) n'a rien trouvé — plus coûteux et moins précis, donc jamais la
+    première stratégie."""
+    terme_nettoye = terme.strip()
+    if not terme_nettoye:
+        return []
+
+    requete = text(
+        """
+        SELECT id, titre, slug, resume,
+               similarity(unaccent(titre), unaccent(:terme)) AS score
+        FROM notion
+        WHERE similarity(unaccent(titre), unaccent(:terme)) >= :seuil
+        ORDER BY score DESC
+        LIMIT 5
+        """
+    )
+    resultat = db.session.execute(
+        requete, {"terme": terme_nettoye, "seuil": _SEUIL_SIMILARITE}
+    )
+    return [dict(ligne._mapping) for ligne in resultat]
+
+
+def lister_titres_slugs() -> list[dict]:
+    """Liste (titre, slug) de toutes les notions existantes. Utilisé pour
+    le troisième palier de recherche (correspondance IA) : savoir si un
+    terme reformulé correspond en réalité à un contenu déjà généré, avant
+    de partir sur une génération complète.
+
+    Limite connue : charge TOUTES les notions en mémoire à chaque appel de
+    ce palier — acceptable pour le volume actuel, mais à revoir (recherche
+    vectorielle, pagination...) si la base grossit significativement."""
+    lignes = db.session.execute(
+        text("SELECT titre, slug FROM notion ORDER BY titre")
+    ).mappings()
+    return [dict(ligne) for ligne in lignes]
+
+
 def obtenir_par_slug(slug: str) -> Notion | None:
     """Récupère une notion complète (avec ses ressources) par son slug."""
     return Notion.query.filter_by(slug=slug).first()
