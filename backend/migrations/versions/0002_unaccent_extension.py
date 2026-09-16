@@ -1,13 +1,13 @@
 """active l'extension unaccent
 
 Revision ID: 0002_unaccent
-Revises: b9f0104e165c
+Revises: 8ef55fc8b660
 Create Date: 2026-09-15
 """
 from alembic import op
 
 revision = "0002_unaccent"
-down_revision = "b9f0104e165c"
+down_revision = "8ef55fc8b660"
 branch_labels = None
 depends_on = None
 

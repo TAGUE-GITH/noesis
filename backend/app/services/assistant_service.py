@@ -1,47 +1,46 @@
 from app.clients import ia_client
-from app.models.fiche import Fiche
+from app.models.notion import Notion
 
 
-def construire_contexte(fiche: Fiche) -> str:
-    """Construit le texte transmis à l'IA comme contexte — uniquement les
-    champs de LA fiche consultée, rien d'autre (pas les autres fiches, pas
-    de connaissance externe). C'est cette restriction qui garantit que la
-    réponse reste ancrée dans un contenu vérifié par Franck plutôt que dans
-    les connaissances générales du modèle."""
-    lignes = [
-        f"Titre : {fiche.titre}",
-        f"Définition : {fiche.definition}",
-    ]
-    if fiche.concepts_cles:
-        lignes.append("Concepts clés : " + ", ".join(fiche.concepts_cles))
-    if fiche.prerequis:
-        lignes.append("Prérequis : " + ", ".join(fiche.prerequis))
-    if fiche.pour_aller_plus_loin:
-        lignes.append("Pour aller plus loin : " + fiche.pour_aller_plus_loin)
+def construire_contexte(notion: Notion) -> str:
+    """Construit le texte transmis à l'IA comme contexte — uniquement le
+    contenu de CETTE notion, rien d'autre (pas les autres notions, pas de
+    connaissance externe). C'est cette restriction qui garantit que la
+    réponse reste ancrée dans un contenu déjà affiché au visiteur plutôt
+    que dans les connaissances générales du modèle."""
+    lignes = [f"Titre : {notion.titre}", f"Résumé : {notion.resume}"]
+    for bloc in notion.contenu:
+        titre_bloc = bloc.get("titre") or ""
+        texte_bloc = bloc.get("texte") or ""
+        lignes.append(f"{titre_bloc} : {texte_bloc}".strip(" :"))
+        if bloc.get("code"):
+            lignes.append(f"Code ({bloc.get('langage', '')}) :\n{bloc['code']}")
     return "\n".join(lignes)
 
 
-def repondre_question(fiche: Fiche, question: str) -> dict:
-    """Orchestre la réponse : construit le contexte à partir de la fiche,
+def repondre_question(notion: Notion, question: str) -> dict:
+    """Orchestre la réponse : construit le contexte à partir de la notion,
     interroge l'IA, et renvoie la réponse accompagnée de sa source — pour
-    que le frontend puisse toujours afficher "réponse basée sur : <fiche>"
+    que le frontend puisse toujours afficher "réponse basée sur : <notion>"
     plutôt qu'une réponse dont l'origine est invisible."""
-    contexte = construire_contexte(fiche)
+    contexte = construire_contexte(notion)
     reponse = ia_client.poser_question(contexte, question)
     return {
         "reponse": reponse,
-        "source": {"id": fiche.id, "titre": fiche.titre},
+        "source": {"slug": notion.slug, "titre": notion.titre},
     }
 
 
-def generer_quiz(fiche: Fiche) -> dict:
+def generer_quiz(notion: Notion) -> dict:
     """Même principe que repondre_question : le quiz est généré à partir du
-    contenu de CETTE fiche uniquement, donc la correction (bonne réponse +
-    explication) reste ancrée dans un contenu vérifié — pas de second appel
-    IA nécessaire pour corriger, tout arrive dans la même réponse."""
-    contexte = construire_contexte(fiche)
+    contenu de CETTE notion uniquement, donc la correction (bonne réponse +
+    explication) reste ancrée dans un contenu déjà affiché. Un nouvel appel
+    IA à chaque clic sur "Générer un quiz" (pas de mise en cache ici) : un
+    quiz de base réutilisable pourra être introduit plus tard (incrément
+    exercices) sans changer cette fonction."""
+    contexte = construire_contexte(notion)
     questions = ia_client.generer_quiz(contexte)
     return {
         "questions": questions,
-        "source": {"id": fiche.id, "titre": fiche.titre},
+        "source": {"slug": notion.slug, "titre": notion.titre},
     }

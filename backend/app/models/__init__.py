@@ -1,3 +1,1 @@
-from app.models.fiche import Fiche, Ressource
-
-__all__ = ["Fiche", "Ressource"]
+from app.models.notion import Notion, Ressource
